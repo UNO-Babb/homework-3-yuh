@@ -3,59 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Tile Game</title>
+    <title>Tile Game</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        #board {
-            display: grid;
-            grid-template-columns: repeat(10, 60px);
-            grid-template-rows: repeat(10, 52px);
-            gap: 2px;
-        }
-        .hex {
-            width: 60px;
-            height: 52px;
-            background-color: lightgray;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            transition: background-color 0.2s;
-        }
+        body { font-family: Arial, sans-serif; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; margin-top: 20px; }
+        .tile { width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; border: 1px solid #000; }
+        .tile.blue { background-color: blue; color: white; }
+        .tile.red { background-color: red; color: white; }
+        .tile.winner { background-color: gold; }
+        .tile.current { border: 2px solid green; }
+        .button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .button:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
+    <h1>Tile Game</h1>
 
-<div id="board">
-    <!-- Hexagonal tiles will be added here on clicks -->
-</div>
+    {% if game_over %}
+        <h2>Player {{ winner }} wins!</h2>
+        <form action="/restart" method="get">
+            <button class="button" type="submit">Restart Game</button>
+        </form>
+    {% else %}
+        <h2>It's Player {{ current_player }}'s turn!</h2>
+    {% endif %}
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Create an empty board of hex tiles
-        for (let i = 0; i < 100; i++) {
-            const hexTile = $('<div class="hex"></div>');
-            hexTile.data("clicked", false);  // Track if a tile has been clicked
-            $('#board').append(hexTile);
-        }
+    <div class="board">
+        {% for i in range(1, 13) %}
+            <div class="tile {% if i == player_1_position %}blue{% elif i == player_2_position %}red{% elif i == 9 %}winner{% endif %} {% if (i == player_1_position and current_player == 1) or (i == player_2_position and current_player == 2) %}current{% endif %}">
+                {{ i }}
+            </div>
+        {% endfor %}
+    </div>
 
-        // Add color to hex tiles on click
-        $('#board').on('click', '.hex', function() {
-            if (!$(this).data("clicked")) {  // Only allow one click per tile
-                $.getJSON('/add_tile', function(data) {
-                    $(this).css('background-color', data.color);
-                    $(this).data("clicked", true);  // Mark as clicked
-                }.bind(this));
-            }
-        });
-    });
-</script>
+    <form action="/roll" method="post">
+        <button class="button" type="submit" {% if game_over %}disabled{% endif %}>Roll the Dice</button>
+    </form>
 
+    {% if game_over %}
+        <form action="/restart" method="get">
+            <button class="button" type="submit">Restart Game</button>
+        </form>
+    {% endif %}
 </body>
 </html>
